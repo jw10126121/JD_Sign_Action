@@ -7,14 +7,12 @@ const fs = require('fs')
 const rp = require('request-promise')
 const download = require('download')
 
-// 京东账号1的Cookie
+// 京东Cookie
 const cookie = process.env.JD_COOKIE
-// 京东账号2的Cookie
+// 京东Cookie
 const dual_cookie = process.env.JD_DUAL_COOKIE
 // Server酱SCKEY
 const push_key = process.env.PUSH_KEY
-// 钉钉access_token
-const ding_access_token = process.env.DING_ACCESS_TOKEN
 
 // 京东脚本文件
 const js_url = 'https://raw.githubusercontent.com/NobyDa/Script/master/JD-DailyBonus/JD_DailyBonus.js'
@@ -54,7 +52,6 @@ function dateFormat() {
   return t_Date.Format('yyyy.MM.dd')
 }
 
-// 替换京东cookie
 function setupCookie() {
   var js_content = fs.readFileSync(js_path, 'utf8')
   js_content = js_content.replace(/var Key = ''/, `var Key = '${cookie}'`)
@@ -64,8 +61,7 @@ function setupCookie() {
   fs.writeFileSync(js_path, js_content, 'utf8')
 }
 
-// 发送ServerChan微信通知
-function sendServerChanNotificationIfNeed() {
+function sendNotificationIfNeed() {
 
   if (!push_key) {
     console.log('执行任务结束!'); return;
@@ -104,12 +100,6 @@ function sendServerChanNotificationIfNeed() {
   })
 }
 
-// 发送钉钉通知
-function sendDingDingNotificationIfNeed() {
-
-
-}
-
 function main() {
 
   if (!cookie) {
@@ -123,8 +113,7 @@ function main() {
     // 3、执行脚本
     exec(`node '${js_path}' >> '${result_path}'`);
     // 4、发送推送
-    sendServerChanNotificationIfNeed() 
-    sendDingDingNotificationIfNeed()
+    sendNotificationIfNeed() 
   }).catch((err)=>{
     console.log('脚本文件下载失败，任务中断！');
     fs.writeFileSync(error_path, err, 'utf8')
