@@ -107,41 +107,7 @@ function sendServerChanNotificationIfNeed() {
 // 发送钉钉通知
 function sendDingDingNotificationIfNeed() {
 
-  if (!ding_access_token) {
-    console.log('执行任务结束!'); return;
-  }
 
-  if (!fs.existsSync(result_path)) {
-    console.log('没有执行结果，任务中断!'); return;
-  }
-
-  let text = "京东签到_" + dateFormat();
-  let desp = fs.readFileSync(result_path, "utf8")
-
-  // 去除末尾的换行
-  let SCKEY = ding_access_token.replace(/[\r\n]/g,"")
-
-  const options ={
-    uri:  `https://oapi.dingtalk.com/robot/send?access_token=${SCKEY}`,
-    form: { 'msgtype': 'markdown', 'markdown':  { 'title': text, 'text': desp } },
-    json: true,
-    method: 'POST'
-  }
-
-  rp.post(options).then(res=>{
-    const code = res['errno'];
-    if (code == 0) {
-      console.log("通知发送成功，任务结束！")
-    }
-    else {
-      console.log(res);
-      console.log("通知发送失败，任务中断！")
-      fs.writeFileSync(error_path, JSON.stringify(res), 'utf8')
-    }
-  }).catch((err)=>{
-    console.log("通知发送失败，任务中断！")
-    fs.writeFileSync(error_path, err, 'utf8')
-  })
 }
 
 function main() {
