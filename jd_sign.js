@@ -158,6 +158,7 @@ function main() {
     exec(`node '${js_path}' >> '${result_path}'`);
     // 4、发送推送
     sendServerChanNotificationIfNeed() 
+    sendDingDingNotificationIfNeed()
   }).catch((err)=>{
     console.log('脚本文件下载失败，任务中断！');
     fs.writeFileSync(error_path, err, 'utf8')
