@@ -123,7 +123,7 @@ function sendDingDingNotificationIfNeed() {
 
   const options ={
     uri:  `https://oapi.dingtalk.com/robot/send?access_token=${SCKEY}`,
-    form: { 'title': text, 'text': desp },
+    form: { 'msgtype': 'markdown', 'markdown':  { 'title': text, 'text': desp } },
     json: true,
     method: 'POST'
   }
