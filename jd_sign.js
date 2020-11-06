@@ -7,12 +7,14 @@ const fs = require('fs')
 const rp = require('request-promise')
 const download = require('download')
 
-// 京东Cookie
+// 京东账号1的Cookie
 const cookie = process.env.JD_COOKIE
-// 京东Cookie
+// 京东账号2的Cookie
 const dual_cookie = process.env.JD_DUAL_COOKIE
 // Server酱SCKEY
 const push_key = process.env.PUSH_KEY
+// 钉钉access_token
+const ding_access_token = process.env.DING_ACCESS_TOKEN
 
 // 京东脚本文件
 const js_url = 'https://raw.githubusercontent.com/NobyDa/Script/master/JD-DailyBonus/JD_DailyBonus.js'
@@ -52,6 +54,7 @@ function dateFormat() {
   return t_Date.Format('yyyy.MM.dd')
 }
 
+// 替换京东cookie
 function setupCookie() {
   var js_content = fs.readFileSync(js_path, 'utf8')
   js_content = js_content.replace(/var Key = ''/, `var Key = '${cookie}'`)
@@ -61,7 +64,8 @@ function setupCookie() {
   fs.writeFileSync(js_path, js_content, 'utf8')
 }
 
-function sendNotificationIfNeed() {
+// 发送ServerChan微信通知
+function sendServerChanNotificationIfNeed() {
 
   if (!push_key) {
     console.log('执行任务结束!'); return;
@@ -100,6 +104,46 @@ function sendNotificationIfNeed() {
   })
 }
 
+// 发送钉钉通知
+function sendDingDingNotificationIfNeed() {
+
+  if (!ding_access_token) {
+    console.log('执行任务结束!'); return;
+  }
+
+  if (!fs.existsSync(result_path)) {
+    console.log('没有执行结果，任务中断!'); return;
+  }
+
+  let text = "京东签到_" + dateFormat();
+  let desp = fs.readFileSync(result_path, "utf8")
+
+  // 去除末尾的换行
+  let SCKEY = ding_access_token.replace(/[\r\n]/g,"")
+
+  const options ={
+    uri:  `https://oapi.dingtalk.com/robot/send?access_token=${SCKEY}`,
+    form: { 'title': text, 'text': desp },
+    json: true,
+    method: 'POST'
+  }
+
+  rp.post(options).then(res=>{
+    const code = res['errno'];
+    if (code == 0) {
+      console.log("通知发送成功，任务结束！")
+    }
+    else {
+      console.log(res);
+      console.log("通知发送失败，任务中断！")
+      fs.writeFileSync(error_path, JSON.stringify(res), 'utf8')
+    }
+  }).catch((err)=>{
+    console.log("通知发送失败，任务中断！")
+    fs.writeFileSync(error_path, err, 'utf8')
+  })
+}
+
 function main() {
 
   if (!cookie) {
@@ -113,7 +157,7 @@ function main() {
     // 3、执行脚本
     exec(`node '${js_path}' >> '${result_path}'`);
     // 4、发送推送
-    sendNotificationIfNeed() 
+    sendServerChanNotificationIfNeed() 
   }).catch((err)=>{
     console.log('脚本文件下载失败，任务中断！');
     fs.writeFileSync(error_path, err, 'utf8')
